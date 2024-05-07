@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState } from 'react';
 import Select from 'react-select';
 
 const Filter = ({ onFilterChange }) => {
@@ -7,16 +7,19 @@ const Filter = ({ onFilterChange }) => {
     const [remoteOption, setRemoteOption] = useState(null);
     const [payOption, setPayOption] = useState(null);
     const [roleOption, setRoleOption] = useState(null);
+    const [company, setCompany] = useState(null);
 
     const handleFilterChange = () => {
         // Collect selected options and pass them back to parent component
-        const filters = {
-            employees: employeeOption,
-            experience: experienceOption,
-            remote: remoteOption,
-            pay: payOption,
-            role: roleOption
+        let filters = {
+            employees: employeeOption ? employeeOption : null,
+            experience: experienceOption ? experienceOption : null,
+            remote: remoteOption ? remoteOption : null,
+            pay: payOption ? payOption : null,
+            role: roleOption ? roleOption : null,
+            company:company ? company : null
         };
+        
         onFilterChange(filters);
     };
 
@@ -45,6 +48,7 @@ const Filter = ({ onFilterChange }) => {
     ];
 
     const remote = [
+        { value: 'select', label: 'select' },
         { value: 'remote', label: 'Remote' },
         { value: 'hybrid', label: 'Hybrid' },
         { value: 'in-Office', label: 'In-office' },
@@ -56,6 +60,10 @@ const Filter = ({ onFilterChange }) => {
         { value: 'fullstack', label: 'Full-stack' },
     ];
 
+    useEffect(()=>{
+        handleFilterChange();
+    },[employeeOption,payOption,roleOption,experienceOption,remoteOption,company])
+
     return (
         <div className="filter">
             <Select
@@ -64,7 +72,6 @@ const Filter = ({ onFilterChange }) => {
                 value={employeeOption}
                 onChange={(selectedOption)=>{
                     setEmployeeOption(selectedOption);
-                    handleFilterChange();
                 }}
                 isClearable
             />
@@ -73,7 +80,6 @@ const Filter = ({ onFilterChange }) => {
                 options={experience}
                 onChange={(selectedOption)=>{
                     setExperienceOption(selectedOption);
-                    handleFilterChange();
                 }}
                 isClearable
             />
@@ -82,7 +88,6 @@ const Filter = ({ onFilterChange }) => {
                 options={remote}
                 onChange={(selectedOption)=>{
                     setRemoteOption(selectedOption);
-                    handleFilterChange();
                 }}
                 isClearable
             />
@@ -91,7 +96,6 @@ const Filter = ({ onFilterChange }) => {
                 options={pay}
                 onChange={(selectedOption)=>{
                     setPayOption(selectedOption);
-                    handleFilterChange();
                 }}
                 isClearable
             />
@@ -100,10 +104,10 @@ const Filter = ({ onFilterChange }) => {
                 options={role}
                 onChange={(selectedOption)=>{
                     setRoleOption(selectedOption);
-                    handleFilterChange();
                 }}
                 isClearable
             />
+            <input value={company} placeholder='Company name' onChange={(e)=>{setCompany(e.target.value)}} />
         </div>
     );
 };

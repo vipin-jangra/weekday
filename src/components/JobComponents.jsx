@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import JobCard from "./JobCardComponent";
 import { jobsList } from "../apicalls/jobListing";
 import Filter from "./Filter";
@@ -9,7 +9,7 @@ const JobComponent = () => {
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [offset, setOffset] = useState(0);
-
+    const [filter,setfilters] = useState([]);
     const observer = useRef();
 
     const lastJobPostRef = useCallback(node => {
@@ -18,8 +18,7 @@ const JobComponent = () => {
         if (observer.current) observer.current.disconnect();
         observer.current = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting && hasMore) {
-                console.log(entries[0].isIntersecting);
-               setOffset(prev => prev +9);
+               setOffset(prev => prev + 9);
             }
         });
 
@@ -33,8 +32,8 @@ const JobComponent = () => {
             const response = await jobsList(data);
             if (response && response.jdList.length > 0) {
                 setJobs(prevJobs => [...prevJobs, ...response.jdList]);
-                setFilteredJobs(prevFilteredJobs => [...prevFilteredJobs, ...response.jdList]);
-                //setOffset(offset + 1);
+                // setFilteredJobs(prevFilteredJobs => [...prevFilteredJobs, ...response.jdList]);
+
             } else {
                 setHasMore(false);
             }
@@ -45,67 +44,111 @@ const JobComponent = () => {
         }
     };
 
-    const applyFilters = (filters) => {
-        let filtered = jobs;
+    const filterToApply = (filtersList)=>{
+        setfilters(filtersList);
+    }
 
-        // Apply filters
-        if (filters.experience) {
-            const minExperienceValue = parseInt(filters.experience.value);
-            filtered = filtered.filter(job => job.minExp >= minExperienceValue);
-        }
+    const applyFilters = async(filters, jobData) => {
+        
+        try {
+            setLoading(true);
+            let filtered = jobData.filter(job => {
+                // Apply filters based on filter criteria
+                if (filters.experience) {
+                    const minExperienceValue = parseInt(filters.experience.value);
+                    if (job.minExp < minExperienceValue) return false;
+                }
+        
+                if (filters.employees) {
+                    const [minEmployees, maxEmployees] = filters.employees.value.split('-').map(Number);
+                    const jobEmployees = job.numberOfEmployees;
+                    if (jobEmployees < minEmployees || jobEmployees > maxEmployees) return false;
+                }
+        
+                if (filters.remote) {
+                    const remoteStatus = filters.remote.value;
+                    if (job.location !== remoteStatus) return false;
+                }
+        
+                if (filters.pay) {
+                    const minPay = parseInt(filters.pay.value);
+                    if (job.minJdSalary < minPay) return false;
+                }
+        
+                if (filters.role) {
+                    const selectedRole = filters.role.value;
+                    if (job.jobRole !== selectedRole) return false;
+                }
 
-        if (filters.employees) {
-            const employees = filters.employees.value;
-            const [minEmployees, maxEmployees] = employees.split('-').map(Number);
-            filtered = filtered.filter(job => {
-                const jobEmployees = job.numberOfEmployees;
-                return jobEmployees >= minEmployees && jobEmployees <= maxEmployees;
+                if (filters.company) {
+                    const search = filters.company.toLowerCase(); // Convert search term to lowercase
+                    const companyName = job.companyName.toLowerCase(); // Convert company name to lowercase
+                    if (!companyName.includes(search)) return false;
+                }
+        
+                return true;
             });
-        }
 
-        if (filters.remote) {
-            const remoteStatus = filters.remote.value;
-            filtered = filtered.filter(job => job.location === remoteStatus);
+            const filteredJobsMapped =  await filtered.map(job => ({
+                jdUid: job.jdUid,
+                jdLink: job.jdLink,
+                jobDetailsFromCompany: job.jobDetailsFromCompany,
+                maxJdSalary: job.maxJdSalary,
+                minJdSalary: job.minJdSalary,
+                salaryCurrencyCode: job.salaryCurrencyCode,
+                location: job.location,
+                minExp: job.minExp,
+                maxExp: job.maxExp,
+                jobRole: job.jobRole,
+                companyName: job.companyName,
+                logoUrl: job.logoUrl
+            }));
+        
+            setFilteredJobs(filteredJobsMapped);
+            
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
         }
-
-        if (filters.pay) {
-            const pay = parseInt(filters.pay.value);
-            filtered = filtered.filter(job => job.minJdSalary >= pay);
-        }
-
-        if (filters.role) {
-            const role = filters.role.value;
-            filtered = filtered.filter(job => job.jobRole === role);
-        }
-
-        setFilteredJobs(filtered);
-        console.log(filteredJobs);
+        
     };
+    
+    
+    useMemo(() => {
+        
+        applyFilters(filter,jobs); // Initial filtering when filters or jobs change
+    }, [filter, jobs]);
 
     useEffect(() => {
-        if (hasMore) {
             fetchJobs({
                 "limit": 9,
                 "offset": offset
             });
-        }
     }, [offset]);
+
+    
 
     return (
         <div className='wrapper'>
             <div className='container'>
-                <Filter onFilterChange={applyFilters} />
-                {filteredJobs && filteredJobs.map((job, index) => (
-                    
-                    <JobCard
-                        key={job.jdUid}
-                        jobData={job}
-                        lastref={index === filteredJobs.length - 1 ? lastJobPostRef : null}
-                    />
-                ))}
-                {loading && <div>Loading...</div>}
+                
+                <Filter onFilterChange={filterToApply} />
+                
+                {filteredJobs && filteredJobs.length > 0 ? (
+                    filteredJobs.map((filjob, index) => (
+                        <JobCard
+                            key={index}
+                            jobData={filjob}
+                            lastref={index === filteredJobs.length - 1 ? lastJobPostRef : null}
+                        />
+                    ))
+                ) : (
+                    <h2>No jobs matches...</h2>
+                )}
                 {!hasMore && <div>No more jobs to load</div>}
             </div>
+            
         </div>
     );
 };

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-const JobCard = ({jobData,lastref})=>{
-    const [expanded, setExpanded] = useState(false);
-    const toggleExpand = () => {
-        setExpanded(!expanded);
-    };
+
+const JobCard = ({jobData,lastref,onClick})=>{
+    
+
+   
 
     return (
         <div className="card" ref={lastref}>
@@ -22,10 +22,10 @@ const JobCard = ({jobData,lastref})=>{
                     <div className='additional-info-content'>
                         <div className="salary">Estimated Salary: {jobData.salaryCurrencyCode} {jobData.minJdSalary} - {jobData.maxJdSalary}</div>
                         <div className="about-company">
-                            <p className={`description ${expanded ? 'expanded' : ''}`}>
+                            <p className={`description `}>
                                     {jobData.jobDetailsFromCompany}
                             </p>
-                            {!expanded && <div className='view-more' onClick={toggleExpand}>View More</div>}
+                            <div className='view-more'>View More</div>
                             
                         </div>
                     </div>
@@ -39,6 +39,7 @@ const JobCard = ({jobData,lastref})=>{
                     
                 </div>
             </div>
+            
         </div>
     )
 };
