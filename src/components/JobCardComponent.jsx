@@ -1,14 +1,13 @@
 import { useState } from 'react';
 
-const JobCard = ({jobData})=>{
+const JobCard = ({jobData,lastref})=>{
     const [expanded, setExpanded] = useState(false);
-
     const toggleExpand = () => {
         setExpanded(!expanded);
     };
 
     return (
-        <div className="card">
+        <div className="card" ref={lastref}>
             <div className="card-content">
                 <span className="tag">Posted 10 days ago</span>
                 <div className="cmpny-details">

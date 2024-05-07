@@ -56,42 +56,52 @@ const Filter = ({ onFilterChange }) => {
         { value: 'fullstack', label: 'Full-stack' },
     ];
 
-    useEffect(() => {
-        handleFilterChange();
-    }, [employeeOption, experienceOption, remoteOption, payOption, roleOption]);
-
     return (
         <div className="filter">
             <Select
                 placeholder="No. of employees"
                 options={NoOfEmployees}
                 value={employeeOption}
-                onChange={setEmployeeOption}
-                isMulti
+                onChange={(selectedOption)=>{
+                    setEmployeeOption(selectedOption);
+                    handleFilterChange();
+                }}
                 isClearable
             />
             <Select
                 placeholder="Experience"
                 options={experience}
-                onChange={setExperienceOption}
+                onChange={(selectedOption)=>{
+                    setExperienceOption(selectedOption);
+                    handleFilterChange();
+                }}
                 isClearable
             />
             <Select
                 placeholder="Remote"
                 options={remote}
-                onChange={setRemoteOption}
+                onChange={(selectedOption)=>{
+                    setRemoteOption(selectedOption);
+                    handleFilterChange();
+                }}
                 isClearable
             />
             <Select
                 placeholder="Minimum base pay"
                 options={pay}
-                onChange={setPayOption}
+                onChange={(selectedOption)=>{
+                    setPayOption(selectedOption);
+                    handleFilterChange();
+                }}
                 isClearable
             />
             <Select
                 placeholder="Role"
                 options={role}
-                onChange={setRoleOption}
+                onChange={(selectedOption)=>{
+                    setRoleOption(selectedOption);
+                    handleFilterChange();
+                }}
                 isClearable
             />
         </div>
